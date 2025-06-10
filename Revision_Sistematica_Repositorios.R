@@ -91,6 +91,8 @@ Grafico_combinado <-
 
 Grafico_combinado
 
+# Descarga de gráfico (opcional)
+#ggplot2::ggsave(filename = "CRAN_Publicados_Descargados.png", plot = Grafico_combinado, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.2, width = 25, height = 15, units = "cm", dpi = 150)
 
 # Consultando Bioconductor ------------------------------------------------
 # Cargamos el listado de paquetes desde Bioconductor
@@ -140,6 +142,9 @@ ggraph(graph, layout = "circle") +
   ggtitle("Paquetes que dependen de CircSeqAlignTk")
 
 Grafico_dependencias
+
+# Descarga de gráfico (opcional)
+#ggplot2::ggsave(filename = "Bioconductor_Dependencias.png", plot = Grafico_dependencias, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.2, width = 25, height = 25, units = "cm", dpi = 150, bg = "white")
 
 # Consultando GitHub ------------------------------------------------------
 # Establecemos el "Personal Access Token" 
@@ -220,3 +225,6 @@ repo_df %>%
   theme(axis.text.y = element_text(size = 7))
 
 Variacion_estrellas
+
+# Descarga de gráfico (opcional)
+#ggplot2::ggsave(filename = "Github_estrellas.png", plot = Variacion_estrellas, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.1, width = 15, height = 25, units = "cm", dpi = 150, bg = "white")
