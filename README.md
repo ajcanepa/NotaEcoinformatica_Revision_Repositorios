@@ -12,18 +12,19 @@ El código presenta y detalla brevemente algunos paquetes y funciones que permit
 
 * Listado de paquetes creados y descargados en CRAN
 
-![](Figuras/CRAN_Publicados_Descargados.png){#id1 .class width=75% height=75%}
+<img src="Figuras/CRAN_Publicados_Descargados.png" alt="Listado de paquetes creados y descargados en CRAN" width="75%">
+
 
 ***
 
 * Gráfico de dependencias de paquetes en Bioconductor
 
-![](Figuras/Bioconductor_Dependencias.png){#id2 .class width=75% height=75%}
+<img src="Figuras/Bioconductor_Dependencias.png" alt="Gráfico de dependencias de paquetes en Bioconductor" width="75%">
 
 ***
 
 * Fecha de creación y número de estrellas de paquetes en GitHub
 
-![](Figuras/Github_estrellas.png){#id3 .class width=75% height=75%}
+<img src="Figuras/Github_estrellas.png" alt="Gráfico de estrellas en GitHub" width="75%">
 
 ***
