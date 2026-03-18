@@ -1,5 +1,5 @@
 # Revisión sistemática de repositorios para el lenguaje R (CRAN, GitHub, Bioconductor)
-por: Antonio Jesús Canepa Oneto.
+por: Antonio Jesús Canepa Oneto y Claudia Fernández Ruiz.
 
 
 ### Introducción
