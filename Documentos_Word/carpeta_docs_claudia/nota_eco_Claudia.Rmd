@@ -61,6 +61,9 @@ A continuación se muestra una consulta para encontrar todos los paquetes relaci
 Para aplicar esta consulta en nuestro conjunto de datos deberíamos ejecutar:
 
 ```{r, message=FALSE, warning=FALSE, eval=FALSE}
+#Cargamos la función para unificar las búsquedas
+source('Documentos_Word/carpeta_docs_claudia/consulta_CRAN.R')
+
 # Cargamos el listado de paquetes desde CRAN
 cran <- tools::CRAN_package_db() %>% tibble::as_tibble()
 
@@ -69,10 +72,11 @@ cran_filtrado <-
   cran %>%
   mutate(
     text = paste(Package, Title, Description, sep = " "),
-    keep = grepl("alignment|sequence alignment|multiple alignment", 
-                 text, ignore.case = TRUE) &
-           grepl("pipeline|workflow|nextflow|reproducible workflow|workflow automation", 
-                 text, ignore.case = TRUE)
+    query = consulta_CRAN("alignment or sequence alignment or multiple alignment and  pipeline or workflow or nextflow or reproducible workflow or workflow automation"),
+
+    keep = Reduce(`&`, lapply(strsplit(query, "&")[[1]], function(segunda_condicion) {
+      grepl(segunda_condicion, text, ignore.case = TRUE)
+    }))
   ) %>%
   filter(keep) %>%
   select(-text, -keep)
@@ -95,6 +99,9 @@ Análogamente, la función `biocPkgList()` del paquete `BiocPkgTools` `r citep(c
 Si quisiéramos repetir la misma &#171;query&#187;, tendríamos que ejecutar: 
 
 ```{r, message=FALSE, warning=FALSE, eval=FALSE}
+#Cargamos la función para unificar las búsquedas
+source('Documentos_Word/carpeta_docs_claudia/consulta_Bioconductor.R')
+
 # Cargamos el listado de paquetes desde CRAN
 Bioconductor <- BiocPkgTools::biocPkgList()
 
@@ -103,8 +110,12 @@ Bioconductor_filtered <-
   Bioconductor %>%
   mutate(
     text = paste(Package, Title, Description, sep = " "),
-    keep = grepl("alignment|sequence alignment|multiple alignment", text, ignore.case = TRUE) &
-      grepl("pipeline|workflow|nextflow|reproducible workflow|workflow automation", text, ignore.case = TRUE)) %>%
+    query = consulta_Bioconductor("alignment or sequence alignment or multiple alignment and  pipeline or workflow or nextflow or reproducible workflow or workflow automation"),
+
+    keep = Reduce(`&`, lapply(strsplit(query, "&")[[1]], function(segunda_condicion) {
+      grepl(segunda_condicion, text, ignore.case = TRUE)
+    }))
+  ) %>%
   filter(keep) %>%
   select(-text, -keep)
 ```
@@ -117,16 +128,20 @@ En cuanto al repositorio GitHub, la búsqueda sistemática se realiza mediante e
 En términos de la propia &#171;query&#187;, la búsqueda no es tan sencilla como en los casos anteriores y para mantener la búsqueda lo más similar a los dos casos anteriores, usaremos dos vectores con los conjuntos de palabras dentro de la conexión `OR` y así ambos vectores luego se usan a modo de `AND`, según el siguiente código:
 
 ```{r, message=FALSE, warning=FALSE, eval=FALSE}
-# Establecemos el "Personal Access Token" 
-Sys.setenv(GITHUB_TOKEN = "your_token_here")
+#Cargamos la función para unificar las búsquedas
+source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
 
-# El query equivalente se ha de realizar combinando los strings del OR y uniéndolos luego (quivalencia con el AND)
-keywords_group_1 <- c("alignment", "\"sequence alignment\"", "\"multiple alignment\"")
-keywords_group_2 <- c("pipeline", "workflow", "nextflow", "\"reproducible workflow\"", "\"workflow automation\"")
+# Establecemos el "Personal Access Token" 
+Sys.setenv(GITHUB_TOKEN = "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")
+
+# El query equivalente se ha de realizar combinando los strings del OR y uniéndolos con el AND
+keywords_group <- consulta_GitHub("alignment or sequence alignment or multiple alignment and  pipeline or workflow or nextflow or reproducible workflow or workflow automation")
+
 
 # generamos la query
-queries <- expand.grid(keywords_group_1, keywords_group_2, stringsAsFactors = FALSE) %>%
+queries <- expand.grid(keywords_group[[1]], keywords_group[[2]], stringsAsFactors = FALSE) %>%
   transmute(query = paste0(Var1, " ", Var2, " in:name,description,readme language:R"))
+
 
 
 # Ahora se itera entre las variables con las palabras clave (equivalente al AND)
