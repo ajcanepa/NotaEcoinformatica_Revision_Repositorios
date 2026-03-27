@@ -1,0 +1,386 @@
+---
+title: "Revisión sistemática de repositorios de paquetes para el lenguaje R (CRAN, GitHub, Bioconductor)"
+  
+author: Antonio J. Canepa Oneto^1^ , Claudia Fernández Ruiz
+  
+output:
+  word_document:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7.5
+    highlight: null
+    reference_docx: Ecosistemas_template.docx
+    
+csl: ecosistemas.csl
+
+bibliography: 
+  - references.bib
+  - knitcitations.bib
+---
+
+> (1) Departamento de Ingeniería Informática, Universidad de Burgos, Burgos, Spain
+
+> Autor de correspondencia\*: Antonio J. Canepa Oneto [[ajcanepa@ubu.es](mailto:ajcanepa@ubu.es){.email}]
+
+# Palabras clave
+
+> revisión sistemática; repositorios; CRAN; GitHub
+
+# Keywords
+
+> systematic review; repository; CRAN; GitHub
+
+```{r knitcitations, echo = FALSE, cache = FALSE, warning = FALSE, message = FALSE}
+library(tidyverse)
+library(rmarkdown)
+library(knitcitations)
+library(BiocPkgTools)
+library(igraph)
+library(ggraph)
+library(tidygraph)
+cleanbib()   
+options("citation_format" = "pandoc")
+```
+
+# Introducción
+Los lenguajes de programación comunes en ciencia de datos como R, Julia o Python, poseen una gran diversidad de paquetes que permiten extender sus funcionalidades a demanda [@Thieme2018Rgeneration]. Particularmente, en el lenguaje de programación R estos paquetes se distribuyen principalmente en tres repositorios como son el CRAN, Bioconductor y de una manera mucho menos regulada en GitHub [@PLAKIDAS2017119]. Debido a la gran cantidad de paquetes en estos repositorios (CRAN posee 22,403 paquetes y Bioconductor posee `r 2341 + 928 + 432 + 30` paquetes especializados en bioinformática), se han creado aproximaciones de sistematización y categorización de estas herramientas, en las que los paquetes son agrupados por temáticas y/o usos particulares. En el repositorio CRAN existen los _CRAN TASK VIEWS_ ([https://cran.r-project.org/web/views/](https://cran.r-project.org/web/views/)) con 48 disciplinas como agricultura, econometría, meta-análisis, etc. En Bioconductor, existen los _BiocViews_ ([https://www.bioconductor.org/packages/release/BiocViews.html](https://www.bioconductor.org/packages/release/BiocViews.html)) que son un sistema jerárquico de (taxonomía) anotación en la que los paquetes se agrupan en catálogos según palabras clave de búsqueda. Sin embargo, una gran cantidad de desarrollo de software está fuera de estos repositorios (prinipalmente en GitHub) y muchas veces contienen paquetes muy interesantes. 
+
+Tanto para quién desea generar un paquete nuevo, como para quiénes buscan realizar una investigación sistemática de las herramientas existentes, el poder generar búsquedas sistemáticas es de gran ayuda. Así, existe una plataforma web `libraries.io` [@librariesio], que permite buscar paquetes de más de 32 repositorios. Sin embargo, en esta plataforma solo se encuentra información de los paquetes disponibles en CRAN (no existe implementación de Bioconductor ni de GitHub) y no se sistematiza la información de los paquetes. En este sentido, se han realizado esfuerzos por consultar y analizar los diferentes repositorios como CRAN y Bioconductor [@PLAKIDAS2017119], o bien conectando con la API de GitHub para analizar las tendencias temporales de las funciones disponibles [@Staples2023expansion]. Sin embargo, estos esfuerzos responden preguntas científicas específicas y no realizan una revisión sistemática de las herramientas.
+
+Así, tanto como para quién desea explorar los paquetes existentes, como para quien quiera crear un paquete nuevo o incluso analizar sistemáticamente los paquetes disponibles en R, el poder contar con una guía de exploración sistemática de los repositorios es de indudable valor. En este trabajo se presentan algunos paquetes y funciones que permiten hacer una búsqueda sistemática en los tres repositorios más comunes (CRAN, Bioconductor, GitHub) donde encontramos paquetes para el lenguaje de programación R.
+
+
+## Consultando CRAN
+
+El repositorio CRAN puede consultarse usando la función `CRAN_package_db()` del paquete `tools` `r citep(citation("tools"))`. Así, obtenemos un `data.frame` con 22,446 filas (los paquetes de R en CRAN al momento de la consulta) y con 69 variables o atributos (columnas) que describen las propiedades de estos paquetes. Así, la búsqueda sistemática se realizaría mediante la función `grepl()`, que permite crear nuestra consulta o _&#171;query&#187;_. Esta &#171;query&#187; la aplicaremos (a modo de ejemplo) tanto en el nombre del paquete como en el título y en la descripción. Así, nos aseguramos que las palabras claves a buscar sean encontradas en alguna sección importante del paquete. 
+
+A continuación se muestra una consulta para encontrar todos los paquetes relacionados con las palabras clave _&#171;aligment&#187;_ and _&#171;pipeline&#187;_ siguiendo el siguiente __motor de búsqueda__: 
+
+> `(alignment OR sequence alignment OR multiple alignment) AND (pipeline OR workflow OR nextflow OR reproducible workflow OR workflow automation)`
+
+Para aplicar esta consulta en nuestro conjunto de datos deberíamos ejecutar:
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+# Cargamos el listado de paquetes desde CRAN
+cran <- tools::CRAN_package_db() %>% tibble::as_tibble()
+
+# Filtramos según la búsqueda/query usada
+cran_filtrado <- 
+  cran %>%
+  mutate(
+    text = paste(Package, Title, Description, sep = " "),
+    keep = grepl("alignment|sequence alignment|multiple alignment", 
+                 text, ignore.case = TRUE) &
+           grepl("pipeline|workflow|nextflow|reproducible workflow|workflow automation", 
+                 text, ignore.case = TRUE)
+  ) %>%
+  filter(keep) %>%
+  select(-text, -keep)
+
+```
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+# Cargamos la imagen del día 27 mayo de 2025
+load(file = "Revision_Sistematica_Repositorios.RData")
+```
+
+
+En este caso nos encontraríamos con un objeto `tibble` de 5 filas y las mismas 69 columnas originales de la tabla original de CRAN. Por lo tanto tenemos 5 paquetes que coinciden con nuestra búsqueda. Ahora ya podremos calcular algunas estadísticas como por ejemplo el número de paquetes publicados por año o bien el número de descargas realizadas desde el CRAN, usando el paquete `cranlogs` `r citep(citation("cranlogs"))` (ver la \@ref(fig:fig1)).
+
+
+## Consultando Bioconductor
+
+Análogamente, la función `biocPkgList()` del paquete `BiocPkgTools` `r citep(citation("BiocPkgTools"))` nos permite descargar un objeto `tibble` que contiene un listado de los paquetes disponibles en Bioconductor. En este caso, es un `tibble` con 2.341 filas (paquetes) y con 47 columnas o atributos que describen a los diferentes paquetes. Usando el comando `names(objeto_tibble)`, podríamos acceder a estos atributos.
+
+Si quisiéramos repetir la misma &#171;query&#187;, tendríamos que ejecutar: 
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+# Cargamos el listado de paquetes desde CRAN
+Bioconductor <- BiocPkgTools::biocPkgList()
+
+# Filtramos según la búsqueda/query usada
+Bioconductor_filtered <- 
+  Bioconductor %>%
+  mutate(
+    text = paste(Package, Title, Description, sep = " "),
+    keep = grepl("alignment|sequence alignment|multiple alignment", text, ignore.case = TRUE) &
+      grepl("pipeline|workflow|nextflow|reproducible workflow|workflow automation", text, ignore.case = TRUE)) %>%
+  filter(keep) %>%
+  select(-text, -keep)
+```
+
+Obtendríamos en este caso, un conjunto de datos tabulado multiclase (`S3: biocPkgList/tbl_df/tbl/data.frame`) con 6 filas correspondientes a los 6 paquetes que coinciden con nuestra búsqueda y las 47 columnas o atributos que describen a los paquetes consultados. Ahora que ya conocemos los paquetes resultantes de nuestra búsqueda, podríamos indagar más sobre ellos, por ejemplo averiguando qué otros paquetes del ecosistema R importa el paquete `CircSeqAlignTk` (ver \@ref(fig:fig2)).
+
+## Consultando GitHub
+En cuanto al repositorio GitHub, la búsqueda sistemática se realiza mediante el paquete `gh` [@gh_package]. Mediante la función del mismo nombre (`gh()`) podemos consultar la API de GitHub. Para consultar el API necesitaremos de una llave o *token* que se puede obtener desde [https://github.com/settings/tokens](https://github.com/settings/tokens). 
+
+En términos de la propia &#171;query&#187;, la búsqueda no es tan sencilla como en los casos anteriores y para mantener la búsqueda lo más similar a los dos casos anteriores, usaremos dos vectores con los conjuntos de palabras dentro de la conexión `OR` y así ambos vectores luego se usan a modo de `AND`, según el siguiente código:
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+# Establecemos el "Personal Access Token" 
+Sys.setenv(GITHUB_TOKEN = "your_token_here")
+
+# El query equivalente se ha de realizar combinando los strings del OR y uniéndolos luego (quivalencia con el AND)
+keywords_group_1 <- c("alignment", "\"sequence alignment\"", "\"multiple alignment\"")
+keywords_group_2 <- c("pipeline", "workflow", "nextflow", "\"reproducible workflow\"", "\"workflow automation\"")
+
+# generamos la query
+queries <- expand.grid(keywords_group_1, keywords_group_2, stringsAsFactors = FALSE) %>%
+  transmute(query = paste0(Var1, " ", Var2, " in:name,description,readme language:R"))
+
+
+# Ahora se itera entre las variables con las palabras clave (equivalente al AND)
+results <- map(queries$query, ~ {
+  gh::gh("/search/repositories", q = .x, sort = "stars", order = "desc", per_page = 500)
+})
+```
+
+En este caso el objeto `results` es una lista con la información siguiendo un formato .json, al cual tendremos que extraer la información necesaria. Tal como señala Bryan & Wickham [-@gh_package], la función `gh` permite consultar mínimamente la API de GitHub y deberemos tener un conocimiento claro de los atributos que queremos consultar para poder almacenarlos dentro de un objeto fácilemnte trabajable desde R. En este caso, usaremos la función `map()` del paquete `purrr`  `r citep(citation("purrr"))` para crear un objeto `tibble` que almacene los 18 atributos en los que estamo sinteresados, de la siguiente manera:
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+# Almacenamos la listas de los resultados en un objeto de tipo data.frame
+repo_df <- 
+  results %>%
+  map("items") %>%
+  flatten() %>%
+  unique() %>%
+  map_df(~ {
+    tibble::tibble(
+      name = .x$name,
+      full_name = .x$full_name,
+      description = .x$description,
+      url = .x$html_url,
+      stars = .x$stargazers_count,
+      language = .x$language,
+      license = safely(~ .x$license$name)(.x)$result,  # Safely extract license
+      owner = safely(~ .x$owner$login)(.x)$result,      # Safely extract owner login
+      created_at = .x$created_at,
+      updated_at = .x$updated_at,
+      pushed_at = .x$pushed_at,
+      forks = .x$forks_count,
+      open_issues = .x$open_issues_count,
+      size = .x$size,
+      watchers = .x$watchers_count,
+      has_issues = .x$has_issues,
+      has_wiki = .x$has_wiki,
+      has_pages = .x$has_pages
+    )
+  })
+```
+
+Así, obtenemos un `tibble` de 411 filas correspondiente a los paquetes encontrados y 20 columnas con los atributos que les caracterizan. Uno de estos atributos es el número de estrellas (`stars`) que un paquete posee. Es interesante notar que no es tan clara la relación entre entre el número de estrellas y la fecha de creación del repositorio (\@ref(fig:fig3)).
+
+# Discusión
+Si bien existen herramientas para poder tener una visión general de los paquetes disponibles para el lenguaje de programación R, como pueden ser los `CRAN TASK VIEW` para el repositorio CRAN o los `BiocViews` para el repositorio Bioconductor, no existe una herramienta (aún) que permita ordenar y sistematizar los paquetes presentes en GitHub. Algunas herramientas existentes como la plataforma web `libraries.io` [@librariesio], si bien permite la consulta de paquetes, ésta no permiten hacer una búsqueda en la información de cada uno de los paquetes, haciendo imposible una búsquea sistemática.
+Así, creo que es de importancia contar con un apequeña ayuda para hacer busqueda sistemática dentro de los repositorios más comunes para el lenguaje de programación R como puede ser el CRAN, bioconductor y/o GitHub.
+Texto.
+
+# Conclusiones
+Se presenta una descripción y ejemplos de consultas sistemáticas de los paquetes disponibles en los repositorios más comunes para el lenguaje de programación R (CRAN, bioconductor y GitHub). 
+
+# Contribución de los autores
+
+
+
+# Agradecimientos
+
+Esta nota se ha revisado siguiendo un proceso colaborativo y público disponible en (link al issue correspondiente). Para reproducir tantro los códigos de la nota como las figuras aquí presentadas,   se   puede   consultar   el   repositorio   creado   para   esta   nota   ecoinformática ([https://github.com/ajcanepa/NotaEcoinformatica_Revision_Repositorios](https://github.com/ajcanepa/NotaEcoinformatica_Revision_Repositorios)).
+
+# Referencias
+
+```{r write_citations, cache = FALSE, include = FALSE}
+write.bibtex(file = "knitcitations.bib")
+```
+
+::: {#refs}
+:::
+
+###### PIES DE FIGURA
+
+**Figura 1**. Estadísticas básicas obtenidas de la búsqueda en el repositorio CRAN.
+
+**Figura 2**. Gráfico de dependencias (grafo) del paquete `CircSeqAlignTk`.
+
+**Figura 3**. Variación temporal de los repositorios consultados y su calificación en número de estrellas (log10).
+
+###### FIGURE LEGENDS
+
+**Figure 1**. Basic statistics obtained from the CRAN repository search.
+
+**Figure 2**. Dependency graph (graph) of the `CircSeqAlignTk` package.
+
+**Figure 3**. Time variation of the consulted repositories and their star rating (log10).
+
+###### FIGURA 1
+
+```{r fig1, echo = FALSE, fig.cap = "Figura 1. Estadísticas básicas obtenidas de la búsqueda en el repositorio CRAN", cache = FALSE, out.width="100%"}
+
+Grafico_combinado
+```
+
+```{r, echo = FALSE, fig.cap = "Figura 1. Estadísticas básicas obtenidas de la búsqueda en el repositorio CRAN", cache = FALSE, out.width="100%", eval=FALSE}
+# Evolución temporal ------------------------------------------------------
+# Convertir fechas y extraer el año
+df_years <- cran_filtrado %>%
+  mutate(pub_date = as.Date(`Date/Publication`),
+         pub_year = year(pub_date)) %>%
+  count(pub_year)
+
+# Crear secuencia de todos los años en el rango
+all_years <- data.frame(pub_year = seq(min(df_years$pub_year, na.rm = TRUE),
+                                       max(df_years$pub_year, na.rm = TRUE))) 
+
+# Unir para asegurar que todos los años estén presentes
+df_years_complete <- all_years %>%
+  left_join(df_years, by = "pub_year") %>%
+  mutate(n = ifelse(is.na(n), 0, n))
+
+# Graficar
+paquetes_anio <- 
+  ggplot(df_years_complete, aes(x = as.factor(pub_year), y = n)) +
+  geom_col(fill = "steelblue") +
+  labs(title = "Paquetes publicados por año",
+       x = "",
+       y = "Número de paquetes") +
+  geom_text(aes(label = n), vjust = -0.5, fontface = "bold", size = 2.5) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.7, vjust = 1.5))
+
+#paquetes_anio
+
+
+
+# Paquetes más descargados ------------------------------------------------
+# library(cranlogs)
+
+# Obtener el vector de nombres de paquetes
+package_names <- cran_filtrado %>% pull(Package)
+
+# Obtener el número de descargas de los últimos 7 días
+cran_filtrado_downloads_lastweek <- 
+  cran_downloads(when = "last-week", package = package_names) %>% 
+  tibble::as_tibble()
+
+paquetes_descarga <- 
+cran_filtrado_downloads_lastweek %>%
+  group_by(package) %>%
+  summarise(total_downloads = sum(count), .groups = "drop") %>% 
+  #filter(total_downloads > 300) %>% 
+  ggplot(., aes(x = reorder(package, -total_downloads), y = total_downloads)) +
+  geom_col(fill = "steelblue") +
+  labs(title = "Descarga de paquetes desde CRAN", subtitle = "Última semana",
+       x = "",
+       y = "Número de descargas") +
+  geom_text(aes(label = total_downloads), vjust = -0.5, fontface = "bold", size = 2.5) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1.2))
+
+#paquetes_descarga
+
+
+# ** Combinando ambos gráficos --------------------------------------------
+#library(patchwork)
+
+grafico_combinado <-
+  paquetes_anio + paquetes_descarga + plot_layout(ncol = , 2, widths = c(2, 2.5))
+
+grafico_combinado
+```
+
+###### FIGURA 2
+
+
+```{r Fig2, echo = FALSE, fig.cap = "Figura 2. Gráfico de dependencias (grafo) del paquete CircSeqAlignTk", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE}
+Grafico_dependencias
+```
+
+
+```{r, echo = FALSE, fig.cap = "Figura 2. Gráfico de dependencias (grafo) del paquete CircSeqAlignTk", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE, eval=FALSE}
+# Gráfico de dependencias del paquete `CircSeqAlignTk` 
+# comenzamos con el objeto que contiene todos los paquetes de Bioconductor
+Bioconductor
+
+# Encontramos los paquetes que dependen de `CircSeqAlignTk`
+Dep_pkgs <- Bioconductor %>%
+  filter(Package == "CircSeqAlignTk") %>%
+  pull("Imports") %>%
+  unlist()
+
+# Creamos la lista del borde del gráfico
+edges <- data.frame(
+  from = Dep_pkgs,
+  to = rep("CircSeqAlignTk", length(Dep_pkgs)),
+  stringsAsFactors = FALSE
+)
+
+# Creamos el objeto `igraph`
+graph <- graph_from_data_frame(edges, directed = TRUE)
+
+# Graficamos con ggraph
+Grafico_dependencias <- 
+ggraph(graph, layout = "circle") +
+  geom_edge_link(arrow = arrow(length = unit(3, 'mm')), end_cap = circle(3, 'mm')) +
+  geom_node_label(aes(label = name), repel = TRUE) +
+  theme_void() +
+  ggtitle("Paquetes que dependen de CircSeqAlignTk")
+
+Grafico_dependencias
+```
+
+###### FIGURA 3
+
+```{r Fig3, echo = FALSE, fig.cap = "Figura 3. Variación temporal de los repositorios consultados y su calificación en número de estrellas (log10)", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE}
+Variacion_estrellas
+```
+
+
+```{r, echo = FALSE, fig.cap = "Figura 3. Variación temporal de los repositorios consultados y su calificación en número de estrellas (log10)", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE,eval=FALSE}
+# Para graficar variación en el tiempo
+# convertimos los atributos de tiempo y calculamos intervalos
+repo_df <-
+  repo_df %>% 
+  mutate(
+    created_at = as.Date(created_at),
+    updated_at = as.Date(updated_at),
+    pushed_at = as.Date(pushed_at),
+    age_years = interval(created_at, Sys.Date()) / years(1),
+    score = stars + forks + watchers - open_issues
+  )
+
+# Variacion temporal de las estrellas
+Variacion_estrellas <- 
+repo_df %>%
+  filter(stars > 25) %>%
+  ggplot(., aes(x = created_at, y = reorder(name, created_at))) +
+  geom_point(aes(color = stars), size = 3) +
+  scale_color_viridis(option = "C", trans = "log10", na.value = "gray") +
+  labs(
+    title = "Creación de repositorios",
+    subtitle = "Línea temporal",
+    x = "Fecha creación",
+    y = "Nombre del repositorio",
+    color = "Estrellas \n (log10)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 7))
+
+Variacion_estrellas
+```
+
+# TODO
+incorporar comentarios y responder (positiva o negativamente) de los documentos: canepa_NotaEcoinf.docx; canepa_NotaEcoinf_ja.docx; canepa_NotaEcoinf_rev.docx
+
+Tendré que ir respondiendo uno a uno (no es tan difícil). Hay algunos comentarios que indican que use funciones en vez de "chunks" de código, pero hay que darle una vuelta porque esto cambia bastante el sentido, porque cómo estarán distribuidas las funciones? --> la idea sería un paquete, pero no tengo tiempo para eso.
+
+Revisar la función con paginación porque entrega después del filtrado cero filas. y mejorarla con la que si funciona (Descomentado)
+
+Agregar en la revisión 3 paquetes/funciones:
+
+* BiocManager::available (The function lists all packages available from repositories() when no pattern is provided. This usually includes CRAN and Bioconductor packages. The function can also be used to check for package name availability. Common use cases include annotation package lookups by organism short name (e.g., "hsapiens").)
+
+* pkgsearch: https://r-hub.github.io/pkgsearch/   // https://github.com/r-hub/pkgsearch
+
+* https://r-universe.dev/search // https://docs.ropensci.org/universe/ //  https://docs.r-universe.dev/browse/api.html // https://github.com/ropensci/universe
+
+*  Responder en el github de la AEE
+https://github.com/ecoinfAEET/Notas_Ecosistemas/issues/59#issuecomment-3042319848
