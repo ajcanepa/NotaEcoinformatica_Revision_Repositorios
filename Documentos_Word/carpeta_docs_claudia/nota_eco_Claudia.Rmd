@@ -132,7 +132,7 @@ En términos de la propia &#171;query&#187;, la búsqueda no es tan sencilla com
 source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
 
 # Establecemos el "Personal Access Token" 
-Sys.setenv(GITHUB_TOKEN = "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")
+Sys.setenv(GITHUB_TOKEN = "your token here")
 
 # El query equivalente se ha de realizar combinando los strings del OR y uniéndolos con el AND
 keywords_group <- consulta_GitHub("alignment or sequence alignment or multiple alignment and  pipeline or workflow or nextflow or reproducible workflow or workflow automation")
