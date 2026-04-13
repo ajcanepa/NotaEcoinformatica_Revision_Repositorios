@@ -1,10 +1,36 @@
-#Función para unificar la consulta en CRAM
-consulta_CRAN <- function(query) {
-  if(grepl("\\||&", query)){
-    return(query)
+#Función para consulta en CRAN
+consulta_CRAN <- function(query=NULL) {
+
+  # Cargamos el listado de paquetes desde CRAN
+  Cran <- tools::CRAN_package_db() %>% tibble::as_tibble()
+
+  #Excepción para caso de llamada a función sin query
+  if (base::is.null(query) || !base::is.character(query) || base::trimws(query) == "") {
+    stop("Necesitas entregar un query a la función para realizar el filtrado")
   }
-  query <- gsub("\\s+or\\s+", "|", query, ignore.case= TRUE)
-  query <- gsub("\\s+and\\s+", "&", query, ignore.case= TRUE)
+
+  # Convertir la query al formato CRAN si no contiene ya | o &
+  if(!base::grepl("\\||&", query)){
+      query <- base::gsub("\\s+or\\s+", "|", query, ignore.case= TRUE)
+      query <- base::gsub("\\s+and\\s+", "&", query, ignore.case= TRUE)
+  }
   
-  return(query)
+  # Dividimos la query en las distintas condiciones unidas por AND (funciona con número indefinido de AND)
+  condiciones_AND <- base::strsplit(query, "&")[[1]]
+  condiciones_AND <- base::trimws(condiciones_AND)
+
+  # Filtramos según la búsqueda/query usada
+  Cran_filtrado <- 
+  Cran %>%
+  dplyr::mutate(
+      text = base::paste(Package, Title, Description, sep = " "),
+      keep = base::Reduce(
+        `&`,
+        base::lapply(condiciones_AND, function(g) {
+          base::grepl(g, text, ignore.case = TRUE)
+        })
+      )
+  ) %>%
+  dplyr::filter(keep) %>%
+  dplyr::select(-text, -keep)
 }

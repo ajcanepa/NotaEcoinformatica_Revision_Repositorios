@@ -64,26 +64,13 @@ Para aplicar esta consulta en nuestro conjunto de datos deberíamos ejecutar:
 #Cargamos la función para unificar las búsquedas
 source('Documentos_Word/carpeta_docs_claudia/consulta_CRAN.R')
 
-# Cargamos el listado de paquetes desde CRAN
-cran <- tools::CRAN_package_db() %>% tibble::as_tibble()
-
-# Filtramos según la búsqueda/query usada
-cran_filtrado <- 
-  cran %>%
-  mutate(
-    text = paste(Package, Title, Description, sep = " "),
-    query = consulta_CRAN("alignment or sequence alignment or multiple alignment and  pipeline or workflow or nextflow or reproducible workflow or workflow automation"),
-
-    keep = Reduce(`&`, lapply(strsplit(query, "&")[[1]], function(segunda_condicion) {
-      grepl(segunda_condicion, text, ignore.case = TRUE)
-    }))
-  ) %>%
-  filter(keep) %>%
-  select(-text, -keep)
+# Filtramos sobre CRAN usando una query con operadores booleanos
+Cran_filtrado <- consulta_CRAN(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
+Cran_filtrado
 
 ```
 
-```{r, message=FALSE, warning=FALSE, echo=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE, eval = FALSE}
 # Cargamos la imagen del día 27 mayo de 2025
 load(file = "Revision_Sistematica_Repositorios.RData")
 ```
@@ -102,22 +89,10 @@ Si quisiéramos repetir la misma &#171;query&#187;, tendríamos que ejecutar:
 #Cargamos la función para unificar las búsquedas
 source('Documentos_Word/carpeta_docs_claudia/consulta_Bioconductor.R')
 
-# Cargamos el listado de paquetes desde CRAN
-Bioconductor <- BiocPkgTools::biocPkgList()
+# Filtramos sobre Bioconductor usando una query con operadores booleanos
+Bioconductor_filtrado <- consulta_Bioconductor(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
+Bioconductor_filtrado
 
-# Filtramos según la búsqueda/query usada
-Bioconductor_filtered <- 
-  Bioconductor %>%
-  mutate(
-    text = paste(Package, Title, Description, sep = " "),
-    query = consulta_Bioconductor("alignment or sequence alignment or multiple alignment and  pipeline or workflow or nextflow or reproducible workflow or workflow automation"),
-
-    keep = Reduce(`&`, lapply(strsplit(query, "&")[[1]], function(segunda_condicion) {
-      grepl(segunda_condicion, text, ignore.case = TRUE)
-    }))
-  ) %>%
-  filter(keep) %>%
-  select(-text, -keep)
 ```
 
 Obtendríamos en este caso, un conjunto de datos tabulado multiclase (`S3: biocPkgList/tbl_df/tbl/data.frame`) con 6 filas correspondientes a los 6 paquetes que coinciden con nuestra búsqueda y las 47 columnas o atributos que describen a los paquetes consultados. Ahora que ya conocemos los paquetes resultantes de nuestra búsqueda, podríamos indagar más sobre ellos, por ejemplo averiguando qué otros paquetes del ecosistema R importa el paquete `CircSeqAlignTk` (ver \@ref(fig:fig2)).
@@ -134,20 +109,10 @@ source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
 # Establecemos el "Personal Access Token" 
 Sys.setenv(GITHUB_TOKEN = "your token here")
 
-# El query equivalente se ha de realizar combinando los strings del OR y uniéndolos con el AND
-keywords_group <- consulta_GitHub("alignment or sequence alignment or multiple alignment and  pipeline or workflow or nextflow or reproducible workflow or workflow automation")
+# Filtramos sobre GitHub usando una query con operadores booleanos
+results <- consulta_GitHub(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
 
 
-# generamos la query
-queries <- expand.grid(keywords_group[[1]], keywords_group[[2]], stringsAsFactors = FALSE) %>%
-  transmute(query = paste0(Var1, " ", Var2, " in:name,description,readme language:R"))
-
-
-
-# Ahora se itera entre las variables con las palabras clave (equivalente al AND)
-results <- map(queries$query, ~ {
-  gh::gh("/search/repositories", q = .x, sort = "stars", order = "desc", per_page = 500)
-})
 ```
 
 En este caso el objeto `results` es una lista con la información siguiendo un formato .json, al cual tendremos que extraer la información necesaria. Tal como señala Bryan & Wickham [-@gh_package], la función `gh` permite consultar mínimamente la API de GitHub y deberemos tener un conocimiento claro de los atributos que queremos consultar para poder almacenarlos dentro de un objeto fácilemnte trabajable desde R. En este caso, usaremos la función `map()` del paquete `purrr`  `r citep(citation("purrr"))` para crear un objeto `tibble` que almacene los 18 atributos en los que estamo sinteresados, de la siguiente manera:
@@ -181,6 +146,7 @@ repo_df <-
       has_pages = .x$has_pages
     )
   })
+repo_df
 ```
 
 Así, obtenemos un `tibble` de 411 filas correspondiente a los paquetes encontrados y 20 columnas con los atributos que les caracterizan. Uno de estos atributos es el número de estrellas (`stars`) que un paquete posee. Es interesante notar que no es tan clara la relación entre entre el número de estrellas y la fecha de creación del repositorio (\@ref(fig:fig3)).
