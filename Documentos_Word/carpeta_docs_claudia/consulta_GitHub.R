@@ -2,7 +2,7 @@
 consulta_GitHub <- function(query=NULL) {
 
    #Excepción para caso de llamada a función sin query
-  if (is.null(query) || !is.character(query) || trimws(query) == "") {
+  if (base::is.null(query) || !base::is.character(query) || base::trimws(query) == "") {
     stop("Necesitas entregar un query a la función para realizar el filtrado")
   }
 
@@ -30,6 +30,6 @@ consulta_GitHub <- function(query=NULL) {
   results <- purrr::map(queries, ~ {
     gh::gh("/search/repositories", q = .x, sort = "stars", order = "desc", per_page = 500)
   })
-  
+
   return(results)
 }
