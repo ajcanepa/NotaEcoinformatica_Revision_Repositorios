@@ -107,7 +107,7 @@ En términos de la propia &#171;query&#187;, la búsqueda no es tan sencilla com
 source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
 
 # Establecemos el "Personal Access Token" 
-Sys.setenv(GITHUB_TOKEN = "your token here")
+Sys.setenv(GITHUB_TOKEN = "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")
 
 # Filtramos sobre GitHub usando una query con operadores booleanos
 results <- consulta_GitHub(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
@@ -196,13 +196,13 @@ write.bibtex(file = "knitcitations.bib")
 
 ```{r fig1, echo = FALSE, fig.cap = "Figura 1. Estadísticas básicas obtenidas de la búsqueda en el repositorio CRAN", cache = FALSE, out.width="100%"}
 
-Grafico_combinado
+grafico_combinado
 ```
 
 ```{r, echo = FALSE, fig.cap = "Figura 1. Estadísticas básicas obtenidas de la búsqueda en el repositorio CRAN", cache = FALSE, out.width="100%", eval=FALSE}
 # Evolución temporal ------------------------------------------------------
 # Convertir fechas y extraer el año
-df_years <- cran_filtrado %>%
+df_years <- Cran_filtrado %>%
   mutate(pub_date = as.Date(`Date/Publication`),
          pub_year = year(pub_date)) %>%
   count(pub_year)
@@ -232,10 +232,10 @@ paquetes_anio <-
 
 
 # Paquetes más descargados ------------------------------------------------
-# library(cranlogs)
+#library(cranlogs)
 
 # Obtener el vector de nombres de paquetes
-package_names <- cran_filtrado %>% pull(Package)
+package_names <- Cran_filtrado %>% pull(Package)
 
 # Obtener el número de descargas de los últimos 7 días
 cran_filtrado_downloads_lastweek <- 
@@ -279,7 +279,7 @@ Grafico_dependencias
 ```{r, echo = FALSE, fig.cap = "Figura 2. Gráfico de dependencias (grafo) del paquete CircSeqAlignTk", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE, eval=FALSE}
 # Gráfico de dependencias del paquete `CircSeqAlignTk` 
 # comenzamos con el objeto que contiene todos los paquetes de Bioconductor
-Bioconductor
+Bioconductor<- BiocPkgTools::biocPkgList()
 
 # Encontramos los paquetes que dependen de `CircSeqAlignTk`
 Dep_pkgs <- Bioconductor %>%
