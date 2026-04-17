@@ -107,7 +107,7 @@ En términos de la propia &#171;query&#187;, la búsqueda no es tan sencilla com
 source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
 
 # Establecemos el "Personal Access Token" 
-Sys.setenv(GITHUB_TOKEN = "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")
+Sys.setenv(GITHUB_TOKEN = "your_token_here")
 
 # Filtramos sobre GitHub usando una query con operadores booleanos
 results <- consulta_GitHub(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
@@ -268,6 +268,7 @@ grafico_combinado <-
 grafico_combinado
 ```
 
+
 ###### FIGURA 2
 
 
@@ -308,6 +309,7 @@ ggraph(graph, layout = "circle") +
 Grafico_dependencias
 ```
 
+
 ###### FIGURA 3
 
 ```{r Fig3, echo = FALSE, fig.cap = "Figura 3. Variación temporal de los repositorios consultados y su calificación en número de estrellas (log10)", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE}
@@ -347,6 +349,7 @@ repo_df %>%
 
 Variacion_estrellas
 ```
+
 
 # TODO
 incorporar comentarios y responder (positiva o negativamente) de los documentos: canepa_NotaEcoinf.docx; canepa_NotaEcoinf_ja.docx; canepa_NotaEcoinf_rev.docx
