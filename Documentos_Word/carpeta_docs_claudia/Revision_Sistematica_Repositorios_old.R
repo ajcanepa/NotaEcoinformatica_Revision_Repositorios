@@ -13,11 +13,22 @@ library("viridis")
 
 
 # Consultando CRAN --------------------------------------------------------
-#Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_CRAN.R')
+# Cargamos el listado de paquetes desde CRAN
+Cran <- tools::CRAN_package_db() %>% tibble::as_tibble()
 
 # Filtramos según la búsqueda/query usada
-Cran_filtrado <- consulta_CRAN(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
+Cran_filtrado <- 
+  Cran %>%
+  mutate(
+    text = paste(Package, Title, Description, sep = " "),
+    keep = grepl("alignment|sequence alignment|multiple alignment", 
+                 text, ignore.case = TRUE) &
+      grepl("pipeline|workflow|nextflow|reproducible workflow|workflow automation", 
+            text, ignore.case = TRUE)
+  ) %>%
+  filter(keep) %>%
+  select(-text, -keep)
+
 
 # Evolución temporal
 # Convertir fechas y extraer el año
@@ -46,6 +57,9 @@ Paquetes_anio <-
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 0.7, vjust = 1.5))
 
+Paquetes_anio
+
+
 # Paquetes más descargados
 # Obtener el vector de nombres de paquetes
 Package_names <- Cran_filtrado %>% pull(Package)
@@ -69,24 +83,39 @@ Paquetes_descarga <-
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1.2))
 
+Paquetes_descarga
+
 # Gráfica combinada
 Grafico_combinado <-
   Paquetes_anio + Paquetes_descarga + plot_layout(ncol = , 2, widths = c(1, 1.5))
 
+Grafico_combinado
+
 # Descarga de gráfico (opcional)
 #ggplot2::ggsave(filename = "CRAN_Publicados_Descargados.png", plot = Grafico_combinado, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.2, width = 25, height = 15, units = "cm", dpi = 150)
 
-
 # Consultando Bioconductor ------------------------------------------------
-#Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_Bioconductor.R')
+# Cargamos el listado de paquetes desde Bioconductor
+Bioconductor <- BiocPkgTools::biocPkgList()
 
 # Filtramos según la búsqueda/query usada
-Bioconductor_filtrado <- consulta_Bioconductor(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
+Bioconductor_filtrado <- 
+  Bioconductor %>%
+  mutate(
+    text = paste(Package, Title, Description, sep = " "),
+    keep = grepl("alignment|sequence alignment|multiple alignment", 
+                 text, ignore.case = TRUE) &
+      grepl("pipeline|workflow|nextflow|reproducible workflow|workflow automation", 
+            text, ignore.case = TRUE)
+  ) %>%
+  filter(keep) %>%
+  select(-text, -keep)
+
+Bioconductor_filtrado 
 
 # Gráfico de dependencias del paquete `CircSeqAlignTk` 
 # comenzamos con el objeto que contiene todos los paquetes de Bioconductor
-Bioconductor <- BiocPkgTools::biocPkgList()
+Bioconductor
 
 # Encontramos los paquetes que dependen de `CircSeqAlignTk`
 Dep_pkgs <- Bioconductor %>%
@@ -112,24 +141,64 @@ ggraph(graph, layout = "circle") +
   theme_void() +
   ggtitle("Paquetes que dependen de CircSeqAlignTk")
 
+Grafico_dependencias
+
 # Descarga de gráfico (opcional)
 #ggplot2::ggsave(filename = "Bioconductor_Dependencias.png", plot = Grafico_dependencias, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.2, width = 25, height = 25, units = "cm", dpi = 150, bg = "white")
 
-
 # Consultando GitHub ------------------------------------------------------
-#Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
-
 # Establecemos el "Personal Access Token" 
 Sys.setenv(GITHUB_TOKEN = "your_token_here")
 
-# Filtramos sobre GitHub usando una query con operadores booleanos
-GitHub_filtrado <- consulta_GitHub(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
+# El query equivalente se ha de realizar combinando los strings del OR y uniéndolos luego (quivalencia con el AND)
+keywords_group_1 <- c("alignment", "\"sequence alignment\"", "\"multiple alignment\"")
+keywords_group_2 <- c("pipeline", "workflow", "nextflow", "\"reproducible workflow\"", "\"workflow automation\"")
+
+# generamos la query
+queries <- expand.grid(keywords_group_1, keywords_group_2, stringsAsFactors = FALSE) %>%
+  transmute(query = paste0(Var1, " ", Var2, " in:name,description,readme language:R"))
+
+
+# Ahora se itera entre las variables con las palabras clave (equivalente al AND)
+results <- map(queries$query, ~ {
+  gh::gh("/search/repositories", q = .x, sort = "stars", order = "desc", per_page = 500)
+})
+
+# Almacenamos la listas de los resultados en un objeto de tipo data.frame
+repo_df <- 
+  results %>%
+  map("items") %>%
+  flatten() %>%
+  unique() %>%
+  map_df(~ {
+    tibble::tibble(
+      name = .x$name,
+      full_name = .x$full_name,
+      description = .x$description,
+      url = .x$html_url,
+      stars = .x$stargazers_count,
+      language = .x$language,
+      license = safely(~ .x$license$name)(.x)$result,  # Safely extract license
+      owner = safely(~ .x$owner$login)(.x)$result,      # Safely extract owner login
+      created_at = .x$created_at,
+      updated_at = .x$updated_at,
+      pushed_at = .x$pushed_at,
+      forks = .x$forks_count,
+      open_issues = .x$open_issues_count,
+      size = .x$size,
+      watchers = .x$watchers_count,
+      has_issues = .x$has_issues,
+      has_wiki = .x$has_wiki,
+      has_pages = .x$has_pages
+    )
+  })
+
+repo_df
 
 # Para graficar variación en el tiempo
 # convertimos los atributos de tiempo y calculamos intervalos
 repo_df <-
-  GitHub_filtrado %>% 
+  repo_df %>% 
   mutate(
     created_at = as.Date(created_at),
     updated_at = as.Date(updated_at),
@@ -155,16 +224,7 @@ repo_df %>%
   theme_minimal() +
   theme(axis.text.y = element_text(size = 7))
 
+Variacion_estrellas
+
 # Descarga de gráfico (opcional)
 #ggplot2::ggsave(filename = "Github_estrellas.png", plot = Variacion_estrellas, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.1, width = 15, height = 25, units = "cm", dpi = 150, bg = "white")
-
-
-#Guardar los gráficos en el archivo
-save(
-  Paquetes_anio,
-  Paquetes_descarga,
-  Grafico_combinado,
-  Grafico_dependencias,
-  Variacion_estrellas,
-  file= "Revision_Sistematica_Repositorios.RData"
-)

@@ -110,44 +110,13 @@ source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
 Sys.setenv(GITHUB_TOKEN = "your_token_here")
 
 # Filtramos sobre GitHub usando una query con operadores booleanos
-results <- consulta_GitHub(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
+GitHub_filtrado <- consulta_GitHub(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
 
-
+GitHub_filtrado
 ```
 
-En este caso el objeto `results` es una lista con la información siguiendo un formato .json, al cual tendremos que extraer la información necesaria. Tal como señala Bryan & Wickham [-@gh_package], la función `gh` permite consultar mínimamente la API de GitHub y deberemos tener un conocimiento claro de los atributos que queremos consultar para poder almacenarlos dentro de un objeto fácilemnte trabajable desde R. En este caso, usaremos la función `map()` del paquete `purrr`  `r citep(citation("purrr"))` para crear un objeto `tibble` que almacene los 18 atributos en los que estamo sinteresados, de la siguiente manera:
+En este caso el objeto `results` es una lista con la información siguiendo un formato .json, al cual tendremos que extraer la información necesaria. Tal como señala Bryan & Wickham [-@gh_package], la función `gh` permite consultar mínimamente la API de GitHub y deberemos tener un conocimiento claro de los atributos que queremos consultar para poder almacenarlos dentro de un objeto fácilemnte trabajable desde R. En este caso, usaremos la función `map()` del paquete `purrr`  `r citep(citation("purrr"))` para crear un objeto `tibble` que almacene los 18 atributos en los que estamo sinteresados.
 
-```{r, message=FALSE, warning=FALSE, eval=FALSE}
-# Almacenamos la listas de los resultados en un objeto de tipo data.frame
-repo_df <- 
-  results %>%
-  map("items") %>%
-  flatten() %>%
-  unique() %>%
-  map_df(~ {
-    tibble::tibble(
-      name = .x$name,
-      full_name = .x$full_name,
-      description = .x$description,
-      url = .x$html_url,
-      stars = .x$stargazers_count,
-      language = .x$language,
-      license = safely(~ .x$license$name)(.x)$result,  # Safely extract license
-      owner = safely(~ .x$owner$login)(.x)$result,      # Safely extract owner login
-      created_at = .x$created_at,
-      updated_at = .x$updated_at,
-      pushed_at = .x$pushed_at,
-      forks = .x$forks_count,
-      open_issues = .x$open_issues_count,
-      size = .x$size,
-      watchers = .x$watchers_count,
-      has_issues = .x$has_issues,
-      has_wiki = .x$has_wiki,
-      has_pages = .x$has_pages
-    )
-  })
-repo_df
-```
 
 Así, obtenemos un `tibble` de 411 filas correspondiente a los paquetes encontrados y 20 columnas con los atributos que les caracterizan. Uno de estos atributos es el número de estrellas (`stars`) que un paquete posee. Es interesante notar que no es tan clara la relación entre entre el número de estrellas y la fecha de creación del repositorio (\@ref(fig:fig3)).
 
@@ -196,116 +165,13 @@ write.bibtex(file = "knitcitations.bib")
 
 ```{r fig1, echo = FALSE, fig.cap = "Figura 1. Estadísticas básicas obtenidas de la búsqueda en el repositorio CRAN", cache = FALSE, out.width="100%"}
 
-grafico_combinado
-```
-
-```{r, echo = FALSE, fig.cap = "Figura 1. Estadísticas básicas obtenidas de la búsqueda en el repositorio CRAN", cache = FALSE, out.width="100%", eval=FALSE}
-# Evolución temporal ------------------------------------------------------
-# Convertir fechas y extraer el año
-df_years <- Cran_filtrado %>%
-  mutate(pub_date = as.Date(`Date/Publication`),
-         pub_year = year(pub_date)) %>%
-  count(pub_year)
-
-# Crear secuencia de todos los años en el rango
-all_years <- data.frame(pub_year = seq(min(df_years$pub_year, na.rm = TRUE),
-                                       max(df_years$pub_year, na.rm = TRUE))) 
-
-# Unir para asegurar que todos los años estén presentes
-df_years_complete <- all_years %>%
-  left_join(df_years, by = "pub_year") %>%
-  mutate(n = ifelse(is.na(n), 0, n))
-
-# Graficar
-paquetes_anio <- 
-  ggplot(df_years_complete, aes(x = as.factor(pub_year), y = n)) +
-  geom_col(fill = "steelblue") +
-  labs(title = "Paquetes publicados por año",
-       x = "",
-       y = "Número de paquetes") +
-  geom_text(aes(label = n), vjust = -0.5, fontface = "bold", size = 2.5) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 0.7, vjust = 1.5))
-
-#paquetes_anio
-
-
-
-# Paquetes más descargados ------------------------------------------------
-#library(cranlogs)
-
-# Obtener el vector de nombres de paquetes
-package_names <- Cran_filtrado %>% pull(Package)
-
-# Obtener el número de descargas de los últimos 7 días
-cran_filtrado_downloads_lastweek <- 
-  cran_downloads(when = "last-week", package = package_names) %>% 
-  tibble::as_tibble()
-
-paquetes_descarga <- 
-cran_filtrado_downloads_lastweek %>%
-  group_by(package) %>%
-  summarise(total_downloads = sum(count), .groups = "drop") %>% 
-  #filter(total_downloads > 300) %>% 
-  ggplot(., aes(x = reorder(package, -total_downloads), y = total_downloads)) +
-  geom_col(fill = "steelblue") +
-  labs(title = "Descarga de paquetes desde CRAN", subtitle = "Última semana",
-       x = "",
-       y = "Número de descargas") +
-  geom_text(aes(label = total_downloads), vjust = -0.5, fontface = "bold", size = 2.5) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1.2))
-
-#paquetes_descarga
-
-
-# ** Combinando ambos gráficos --------------------------------------------
-#library(patchwork)
-
-grafico_combinado <-
-  paquetes_anio + paquetes_descarga + plot_layout(ncol = , 2, widths = c(2, 2.5))
-
-grafico_combinado
+Grafico_combinado
 ```
 
 
 ###### FIGURA 2
 
-
 ```{r Fig2, echo = FALSE, fig.cap = "Figura 2. Gráfico de dependencias (grafo) del paquete CircSeqAlignTk", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE}
-Grafico_dependencias
-```
-
-
-```{r, echo = FALSE, fig.cap = "Figura 2. Gráfico de dependencias (grafo) del paquete CircSeqAlignTk", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE, eval=FALSE}
-# Gráfico de dependencias del paquete `CircSeqAlignTk` 
-# comenzamos con el objeto que contiene todos los paquetes de Bioconductor
-Bioconductor<- BiocPkgTools::biocPkgList()
-
-# Encontramos los paquetes que dependen de `CircSeqAlignTk`
-Dep_pkgs <- Bioconductor %>%
-  filter(Package == "CircSeqAlignTk") %>%
-  pull("Imports") %>%
-  unlist()
-
-# Creamos la lista del borde del gráfico
-edges <- data.frame(
-  from = Dep_pkgs,
-  to = rep("CircSeqAlignTk", length(Dep_pkgs)),
-  stringsAsFactors = FALSE
-)
-
-# Creamos el objeto `igraph`
-graph <- graph_from_data_frame(edges, directed = TRUE)
-
-# Graficamos con ggraph
-Grafico_dependencias <- 
-ggraph(graph, layout = "circle") +
-  geom_edge_link(arrow = arrow(length = unit(3, 'mm')), end_cap = circle(3, 'mm')) +
-  geom_node_label(aes(label = name), repel = TRUE) +
-  theme_void() +
-  ggtitle("Paquetes que dependen de CircSeqAlignTk")
-
 Grafico_dependencias
 ```
 
@@ -313,40 +179,6 @@ Grafico_dependencias
 ###### FIGURA 3
 
 ```{r Fig3, echo = FALSE, fig.cap = "Figura 3. Variación temporal de los repositorios consultados y su calificación en número de estrellas (log10)", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE}
-Variacion_estrellas
-```
-
-
-```{r, echo = FALSE, fig.cap = "Figura 3. Variación temporal de los repositorios consultados y su calificación en número de estrellas (log10)", cache = FALSE, out.width="85%", message=FALSE, warning=FALSE,eval=FALSE}
-# Para graficar variación en el tiempo
-# convertimos los atributos de tiempo y calculamos intervalos
-repo_df <-
-  repo_df %>% 
-  mutate(
-    created_at = as.Date(created_at),
-    updated_at = as.Date(updated_at),
-    pushed_at = as.Date(pushed_at),
-    age_years = interval(created_at, Sys.Date()) / years(1),
-    score = stars + forks + watchers - open_issues
-  )
-
-# Variacion temporal de las estrellas
-Variacion_estrellas <- 
-repo_df %>%
-  filter(stars > 25) %>%
-  ggplot(., aes(x = created_at, y = reorder(name, created_at))) +
-  geom_point(aes(color = stars), size = 3) +
-  scale_color_viridis(option = "C", trans = "log10", na.value = "gray") +
-  labs(
-    title = "Creación de repositorios",
-    subtitle = "Línea temporal",
-    x = "Fecha creación",
-    y = "Nombre del repositorio",
-    color = "Estrellas \n (log10)"
-  ) +
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = 7))
-
 Variacion_estrellas
 ```
 

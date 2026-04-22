@@ -31,5 +31,34 @@ consulta_GitHub <- function(query=NULL) {
     gh::gh("/search/repositories", q = .x, sort = "stars", order = "desc", per_page = 500)
   })
 
-  return(results)
+# Almacenamos la listas de los resultados en un objeto de tipo data.frame
+repo_df <- 
+  results %>%
+  map("items") %>%
+  flatten() %>%
+  unique() %>%
+  map_df(~ {
+    tibble::tibble(
+      name = .x$name,
+      full_name = .x$full_name,
+      description = .x$description,
+      url = .x$html_url,
+      stars = .x$stargazers_count,
+      language = .x$language,
+      license = safely(~ .x$license$name)(.x)$result,  # Safely extract license
+      owner = safely(~ .x$owner$login)(.x)$result,      # Safely extract owner login
+      created_at = .x$created_at,
+      updated_at = .x$updated_at,
+      pushed_at = .x$pushed_at,
+      forks = .x$forks_count,
+      open_issues = .x$open_issues_count,
+      size = .x$size,
+      watchers = .x$watchers_count,
+      has_issues = .x$has_issues,
+      has_wiki = .x$has_wiki,
+      has_pages = .x$has_pages
+    )
+  })
+return(repo_df)
+  
 }
