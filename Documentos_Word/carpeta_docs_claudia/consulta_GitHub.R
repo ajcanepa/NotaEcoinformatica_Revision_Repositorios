@@ -16,7 +16,7 @@ consulta_GitHub <- function(query=NULL) {
       base::trimws(terms)
     })
   }
-  # El query equivalente se ha de realizar combinando los strings del OR y uniéndolos luego (quivalencia con el AND)
+  # El query equivalente se ha de realizar combinando los strings del OR y uniéndolos luego (equivalencia con el AND)
   combinaciones <- base::expand.grid(condiciones_OR, stringsAsFactors = FALSE)
 
   # generamos la query
