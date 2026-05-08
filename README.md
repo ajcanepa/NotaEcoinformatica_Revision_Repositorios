@@ -6,9 +6,9 @@ por: [Antonio Jesús Canepa Oneto](https://github.com/ajcanepa) y [Claudia Fern�
 En este repositorio se muestra el código de la nota ecoinformática homónima, disponible aquí [Actualizar codigo.]
 
 ### Objetivos
-El principal objetivo es proveer de una guía de exploración o consulta sistemática de los repositorios más comunes del lenguaje de programación R como son [CRAN](https://cran.r-project.org/), [Bioconductor](https://www.bioconductor.org/) y [GitHub](https://github.com/).
+El principal objetivo es proveer de una guía de exploración o consulta sistemática de los repositorios más comunes del lenguaje de programación R, como son [CRAN](https://cran.r-project.org/), [Bioconductor](https://www.bioconductor.org/) y [GitHub](https://github.com/).
 
-El código presenta y detalla brevemente algunos paquetes y funciones que permiten hacer una búsqueda sistemática en los tres repositorios y crear visualizaciones como:
+La nota provee de funciones y un código detallado que permiten hacer una búsqueda sistemática, mediante queries estructuradas, en los tres repositorios mencionados y crear visualizaciones como:
 
 * Listado de paquetes creados y descargados en CRAN
 
