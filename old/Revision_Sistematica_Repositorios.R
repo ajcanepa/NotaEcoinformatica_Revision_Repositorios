@@ -14,7 +14,7 @@ library("viridis")
 
 # Consultando CRAN --------------------------------------------------------
 #Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_CRAN.R')
+source('R/consulta_CRAN.R')
 
 # Filtramos según la búsqueda/query usada
 Cran_filtrado <- consulta_CRAN(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
@@ -75,12 +75,12 @@ Grafico_combinado <-
   Paquetes_anio + Paquetes_descarga + plot_layout(ncol = , 2, widths = c(1, 1.5))
 
 # Descarga de gráfico (opcional)
-#ggplot2::ggsave(filename = "CRAN_Publicados_Descargados.png", plot = Grafico_combinado, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.2, width = 25, height = 15, units = "cm", dpi = 150)
+#ggplot2::ggsave(filename = "CRAN_Publicados_Descargados.png", plot = Grafico_combinado, path = paste(getwd(), "/Figuras", sep = ""), scale = 1.2, width = 25, height = 15, units = "cm", dpi = 150)
 
 
 # Consultando Bioconductor ------------------------------------------------
 #Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_Bioconductor.R')
+source('R/consulta_Bioconductor.R')
 
 # Filtramos según la búsqueda/query usada
 Bioconductor_filtrado <- consulta_Bioconductor(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
@@ -114,15 +114,15 @@ ggraph(graph, layout = "circle") +
   ggtitle("Paquetes que dependen de CircSeqAlignTk")
 
 # Descarga de gráfico (opcional)
-#ggplot2::ggsave(filename = "Bioconductor_Dependencias.png", plot = Grafico_dependencias, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.2, width = 25, height = 25, units = "cm", dpi = 150, bg = "white")
+#ggplot2::ggsave(filename = "Bioconductor_Dependencias.png", plot = Grafico_dependencias, path = paste(getwd(), "/Figuras", sep = ""), scale = 1.2, width = 25, height = 25, units = "cm", dpi = 150, bg = "white")
 
 
 # Consultando GitHub ------------------------------------------------------
 #Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
+source('R/consulta_GitHub.R')
 
 # Establecemos el "Personal Access Token" 
-Sys.setenv(GITHUB_TOKEN = "tu_token_aqui")
+Sys.setenv(GITHUB_TOKEN = "tu_clave_de_acceso")
 
 # Filtramos sobre GitHub usando una query con operadores booleanos
 GitHub_filtrado <- consulta_GitHub(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
@@ -157,8 +157,8 @@ repo_df %>%
   theme(axis.text.y = element_text(size = 7))
 
 # Descarga de gráfico (opcional)
-#ggplot2::ggsave(filename = "Github_estrellas.png", plot = Variacion_estrellas, path = paste(getwd(), "/OUTPUT/Figuras", sep = ""), scale = 1.1, width = 15, height = 25, units = "cm", dpi = 150, bg = "white")
+#ggplot2::ggsave(filename = "Github_estrellas.png", plot = Variacion_estrellas, path = paste(getwd(), "/Figuras", sep = ""), scale = 1.1, width = 15, height = 25, units = "cm", dpi = 150, bg = "white")
 
 
 #Guardar los gráficos en el archivo
-save.image(file = "Documentos_Word/carpeta_docs_claudia/Revision_Sistematica_Repositorios.RData")
+save.image(file = "Revision_Sistematica_Repositorios.RData")

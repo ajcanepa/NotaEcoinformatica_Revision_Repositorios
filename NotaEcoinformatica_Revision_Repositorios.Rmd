@@ -101,7 +101,7 @@ Para aplicar esta consulta en nuestro conjunto de datos deberíamos ejecutar:
 
 ```{r, message=FALSE, warning=FALSE, eval=FALSE}
 #Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_CRAN.R')
+source('R/consulta_CRAN.R')
 
 # Filtramos sobre CRAN usando una query con operadores booleanos
 Cran_filtrado <- consulta_CRAN(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
@@ -126,7 +126,7 @@ Si quisiéramos repetir la misma &#171;query&#187;, tendríamos que ejecutar:
 
 ```{r, message=FALSE, warning=FALSE, eval=FALSE}
 #Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_Bioconductor.R')
+source('R/consulta_Bioconductor.R')
 
 # Filtramos sobre Bioconductor usando una query con operadores booleanos
 Bioconductor_filtrado <- consulta_Bioconductor(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
@@ -151,7 +151,7 @@ En este caso el objeto `results` es una lista con la información siguiendo un f
 
 ```{r, message=FALSE, warning=FALSE, eval=FALSE}
 #Cargamos la función para unificar las búsquedas
-source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
+source('R/consulta_GitHub.R')
 
 # Establecemos el "Personal Access Token" ("Tu clave de acceso personal")
 Sys.setenv(GITHUB_TOKEN = "tu_clave_de_acceso") 
