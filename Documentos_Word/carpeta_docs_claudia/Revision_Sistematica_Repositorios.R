@@ -62,7 +62,8 @@ Paquetes_descarga <-
   #filter(total_downloads > 300) %>% 
   ggplot(., aes(x = reorder(package, -total_downloads), y = total_downloads)) +
   geom_col(fill = "steelblue") +
-  labs(title = "Descarga de los paquetes desde el CRAN (última semana)",
+  labs(title = "Descarga de paquetes desde CRAN",
+       subtitle = "Última semana",
        x = "",
        y = "Número de descargas") +
   geom_text(aes(label = total_downloads), vjust = -0.5, fontface = "bold", size = 2.5) +
@@ -121,7 +122,7 @@ ggraph(graph, layout = "circle") +
 source('Documentos_Word/carpeta_docs_claudia/consulta_GitHub.R')
 
 # Establecemos el "Personal Access Token" 
-Sys.setenv(GITHUB_TOKEN = "your_token_here")
+Sys.setenv(GITHUB_TOKEN = "tu_token_aqui")
 
 # Filtramos sobre GitHub usando una query con operadores booleanos
 GitHub_filtrado <- consulta_GitHub(query = "alignment or sequence alignment or multiple alignment and pipeline or workflow or nextflow or reproducible workflow or workflow automation")
@@ -160,11 +161,4 @@ repo_df %>%
 
 
 #Guardar los gráficos en el archivo
-save(
-  Paquetes_anio,
-  Paquetes_descarga,
-  Grafico_combinado,
-  Grafico_dependencias,
-  Variacion_estrellas,
-  file= "Revision_Sistematica_Repositorios.RData"
-)
+save.image(file = "Documentos_Word/carpeta_docs_claudia/Revision_Sistematica_Repositorios.RData")

@@ -1,6 +1,15 @@
 #Función para consulta en Bioconductor
 consulta_Bioconductor <- function(query=NULL) {
 
+  #Comprobamos que los paquetes necesarios están instalados, sino, se instalan 
+  paquetes <- c("BiocPkgTools", "dplyr")
+  for (paquete in paquetes){
+    if(!require(paquete, character.only = TRUE)){
+      utils::install.packages(paquete)
+      library(paquete, character.only = TRUE)
+    }
+  }
+
   # Cargamos el listado de paquetes desde Bioconductor
   Bioconductor <- BiocPkgTools::biocPkgList()
 

@@ -1,6 +1,15 @@
 #Función para consulta en CRAN
 consulta_CRAN <- function(query=NULL) {
 
+  #Comprobamos que los paquetes necesarios están instalados, sino, se instalan 
+  paquetes <- c("tools", "dplyr", "tibble")
+  for (paquete in paquetes){
+    if(!require(paquete, character.only = TRUE)){
+      utils::install.packages(paquete)
+      library(paquete, character.only = TRUE)
+    }
+  }
+
   # Cargamos el listado de paquetes desde CRAN
   Cran <- tools::CRAN_package_db() %>% tibble::as_tibble()
 
