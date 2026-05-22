@@ -1,7 +1,7 @@
 ---
 title: "Revisión sistemática de repositorios de paquetes para el lenguaje R (CRAN, GitHub, Bioconductor)"
   
-author: Antonio J. Canepa Oneto^1^ , Claudia Fernández Ruiz
+author: Antonio Canepa-Oneto^1^ , Claudia Fernández Ruiz^1^
   
 output:
   word_document:
@@ -20,7 +20,7 @@ bibliography:
 
 > (1) Departamento de Ingeniería Informática, Universidad de Burgos, Burgos, Spain
 
-> Autor de correspondencia\*: Antonio J. Canepa Oneto [[ajcanepa@ubu.es](mailto:ajcanepa@ubu.es){.email}]
+> Autor de correspondencia\*: Antonio Canepa-Oneto [[ajcanepa@ubu.es](mailto:ajcanepa@ubu.es){.email}]
 
 # Palabras clave
 
@@ -224,10 +224,11 @@ Variacion_estrellas
 ```
 
 
+<!--
 # TODO
 incorporar comentarios y responder (positiva o negativamente) de los documentos: canepa_NotaEcoinf.docx; canepa_NotaEcoinf_ja.docx; canepa_NotaEcoinf_rev.docx
 
-Tendré que ir respondiendo uno a uno (no es tan difícil). Hay algunos comentarios que indican que use funciones en vez de "chunks" de código, pero hay que darle una vuelta porque esto cambia bastante el sentido, porque cómo estarán distribuidas las funciones? --> la idea sería un paquete, pero no tengo tiempo para eso.
+Tendré que ir respondiendo uno a uno (no es tan difícil). Hay algunos comentarios que indican que use funciones en vez de "chunks" de código, pero hay que darle una vuelta porque esto cambia bastante el sentido, porque cómo estarán distribuidas las funciones? porque la idea sería un paquete, pero no tengo tiempo para eso.
 
 Revisar la función con paginación porque entrega después del filtrado cero filas. y mejorarla con la que si funciona (Descomentado)
 
@@ -241,3 +242,6 @@ Agregar en la revisión 3 paquetes/funciones:
 
 *  Responder en el github de la AEE
 https://github.com/ecoinfAEET/Notas_Ecosistemas/issues/59#issuecomment-3042319848
+
+
+-->
