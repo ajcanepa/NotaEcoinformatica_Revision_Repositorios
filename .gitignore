@@ -57,3 +57,11 @@ PAT_Number.txt
 
 # 20260527_NotaEcoinformatica_Revision_Repositorios-main.zip
 20260527_NotaEcoinformatica_Revision_Repositorios-main.zip
+
+# Documento RMarkdown que genera el reporte y sus objetos
+ecosistemas.csl
+Ecosistemas_template.docx
+knitcitations.bib
+LICENSE
+NotaEcoinformatica_Revision_Repositorios.Rmd
+Revision_Sistematica_Repositorios.RData
